@@ -8,10 +8,11 @@ import numpy as np
 WIDTH, HEIGHT = 800, 600
 
 # constantes
-GRAVITY = 9.8/60
-FRICTION = 0.01
+GRAVITY = 0.5
+FRICTION = 0
 DISSIPATION_RATE = 0.995  
-fps = 60
+FPS = 60
+METERS_TO_PIXELS = 100  
 
 # Colors
 WHITE = (255, 255, 255)
@@ -119,49 +120,68 @@ class Ball:
         self.color = color
         self.mass = mass
         self.dragging = False
+        lifted_image = "img\lifted.png"
+        self.lifted = pygame.image.load(lifted_image).convert_alpha() if lifted_image else None  # Carregar imagem PNG
+        self.lifted = pygame.transform.scale(self.lifted, (radius * 4, radius * 2)) if self.lifted else None
+
+    def draw(self, screen):
+        if self.dragging and self.lifted:  # Se arrastando e imagem disponível
+            screen.blit(self.lifted, (self.pos[0] - self.radius, self.pos[1] - self.radius))
+        else:
+            pygame.draw.circle(screen, self.color, self.pos.astype(int), self.radius)
 
     def resolve_collision(self, curve):
         global FRICTION, GRAVITY, DISSIPATION_RATE
-        
+
+        # Encontrar o ponto mais próximo na curva e o vetor tangente
         closest_point, tangent_vector = curve.closest_point_and_tangent(self.pos)
-        to_curve = closest_point - self.pos
-        distance_to_curve = np.linalg.norm(to_curve)
 
-        if distance_to_curve < self.radius:
-            
-            to_curve_unit = to_curve / distance_to_curve
-            self.pos = closest_point - to_curve_unit * self.radius
+        # Vetor da bola até o ponto da curva
+        to_curve = [closest_point[0] - self.pos[0], closest_point[1] - self.pos[1]]
+        distance_to_curve = math.sqrt(to_curve[0] ** 2 + to_curve[1] ** 2)
 
-            # Project velocity onto tangent vector
-            tangent_norm = np.linalg.norm(tangent_vector)
-            if tangent_norm > 0:
-                tangent_unit = tangent_vector / tangent_norm
+        if distance_to_curve < self.radius:  # Detectar colisão
+            # Corrigir a posição da bola
+            to_curve_unit = [to_curve[0] / distance_to_curve, to_curve[1] / distance_to_curve]
+            self.pos[0] = closest_point[0] - to_curve_unit[0] * self.radius
+            self.pos[1] = closest_point[1] - to_curve_unit[1] * self.radius
+
+            # Projetar a velocidade no vetor tangente
+            tangent_length = math.sqrt(tangent_vector[0] ** 2 + tangent_vector[1] ** 2)
+            if tangent_length > 0:
+                tangent_unit = [tangent_vector[0] / tangent_length, tangent_vector[1] / tangent_length]
             else:
-                tangent_unit = np.zeros(2)  # Avoid division by zero
-            
-            vel_tangent = np.dot(self.velocity, tangent_unit)
+                tangent_unit = [0, 0]  # Evitar divisão por zero
 
-            # Update velocity along tangent
-            self.velocity = vel_tangent * tangent_unit * (1 - FRICTION)
+            vel_tangent = (
+                self.velocity[0] * tangent_unit[0] +
+                self.velocity[1] * tangent_unit[1]
+            )
 
-            # Apply dissipation
-            self.velocity *= DISSIPATION_RATE
+            # Atualizar velocidade projetada na tangente
+            self.velocity[0] = vel_tangent * tangent_unit[0] * (1 - FRICTION)
+            self.velocity[1] = vel_tangent * tangent_unit[1] * (1 - FRICTION)
 
-    def draw(self, screen):
-        """Draw the ball on the screen."""
-        pygame.draw.circle(screen, self.color, self.pos.astype(int), self.radius)
+            # Dissipação da energia devido à colisão
+            self.velocity[0] *= DISSIPATION_RATE
+            self.velocity[1] *= DISSIPATION_RATE
 
-    def update(self, curve):
-        """Update the ball's state."""
+
+    def update(self, bezier_curve):
         if not self.dragging:
-            # Apply GRAVITY
+            global GRAVITY, DISSIPATION_RATE
             self.velocity[1] += GRAVITY
 
-            # Update position
-            self.pos += self.velocity
+            # Atualizar posição
+            self.pos[0] += self.velocity[0]
+            self.pos[1] += self.velocity[1]
 
-            # Resolve collision with the Bézier curve
-            self.resolve_collision(curve)
+            # Resolver colisão com a curva de Bézier
+            self.resolve_collision(bezier_curve)
+
+            # Dissipação
+            self.velocity[0] *= DISSIPATION_RATE
+            self.velocity[1] *= DISSIPATION_RATE
 
     def reset(self, pos1=400, pos2=0):
         """Reset the ball's position and velocity."""
@@ -235,12 +255,13 @@ class BezierCurve:
 
     def draw(self, screen, num_segments=100):
         """Draw the Bézier curve on the screen."""
+        global BLACK
         t_values = np.linspace(0, 1, num_segments + 1)
         points = [self.get_point(t) for t in t_values]
         for i in range(num_segments):
             pygame.draw.line(screen, self.color, points[i], points[i + 1], self.width)
 
-    def draw_control_points(self, screen, point_color=(0, 255, 0), point_radius=5):
+    def draw_control_points(self, screen, point_color=BLACK, point_radius=5):
         """Draw control points as circles."""
         for point in self.points:
             pygame.draw.circle(screen, point_color, point.astype(int), point_radius)
