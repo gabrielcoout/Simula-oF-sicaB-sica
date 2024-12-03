@@ -1,19 +1,60 @@
-# SimulacaoFisicaBasica
-Descrição Básica do Projeto
-Este projeto é uma simulação interativa criada para explorar os conceitos de movimento em um plano inclinado, incluindo a influência de forças como gravidade, atrito e dissipação. O objetivo é oferecer uma representação visual que permita entender o comportamento de um corpo deslizando ao longo de uma superfície curva definida por uma Bézier de controle ajustável.
+Aqui está o conteúdo bruto para o arquivo README.md:
 
-A Física de uma Bola em Movimento
-Imagine o cenário: uma bola repousa no topo de uma superfície inclinada e começa a deslizar sob a ação da gravidade. Sua trajetória é influenciada pelo atrito com a superfície e pela curvatura do plano inclinado. Agora, imagine poder modificar a forma do plano inclinando-se para criar cenários variados — desde suaves descidas até quedas abruptas.
+markdown
+Copiar código
+# Simulação Física Básica
 
-Mas o que acontece quando ajustamos a força de gravidade ou alteramos o coeficiente de atrito? O movimento da bola muda completamente, e as interações se tornam ainda mais interessantes. E se, por exemplo, estivéssemos simulando este experimento em outro planeta com gravidade diferente ou até em condições de baixa resistência?
+Este projeto é uma simulação interativa para visualizar conceitos fundamentais de física relacionados ao movimento em um plano inclinado. Ele utiliza gráficos animados para ilustrar como uma bola se comporta ao deslizar sobre uma curva ajustável, considerando fatores como gravidade, atrito e dissipação de energia.
 
-A Simulação
-Com esta simulação, é possível observar em tempo real como uma bola desliza ao longo de uma curva. A trajetória da bola é afetada pelos seguintes fatores ajustáveis:
+## Descrição do Projeto
 
-Gravidade: A força que impulsiona o movimento para baixo.
-Atrito: Que desacelera o movimento da bola ao longo da superfície.
-Dissipação: Que reduz gradualmente a energia do sistema.
-Forma da superfície: Controlada por pontos ajustáveis em uma curva de Bézier.
-A simulação permite modificar esses parâmetros, visualizando como cada um afeta a dinâmica do sistema. O resultado é uma ferramenta que combina física, geometria e programação gráfica para criar um ambiente interativo e educativo.
+A simulação permite que você experimente diferentes cenários ao modificar os parâmetros da curva de controle e observar como a física do sistema reage a essas mudanças. Este projeto é útil para estudantes, educadores e entusiastas de física que desejam explorar conceitos de forma visual e prática.
 
-Essa simulação é inspirada na busca por entender os fundamentos do movimento em superfícies curvas, permitindo que alunos, curiosos e entusiastas da física explorem e experimentem os conceitos em um contexto visual e intuitivo.
+A ideia central é inspirada no movimento de corpos em planos inclinados, considerando como a gravidade e o atrito influenciam a trajetória e a velocidade de uma bola que desliza em uma superfície curva. Você pode ajustar o plano para criar situações personalizadas, analisando o comportamento dinâmico do sistema.
+
+## Implementação
+
+O projeto foi implementado em **Python**, utilizando os seguintes pacotes principais:
+
+- **Pygame**: Para a renderização da interface gráfica e animação interativa.
+- **NumPy**: Para cálculos matemáticos e operações vetoriais.
+
+Esses pacotes foram escolhidos por sua eficiência e facilidade de integração, permitindo que a simulação seja fluida, visualmente atraente e computacionalmente eficiente.
+
+## Como Usar
+
+### Instalação e Dependências
+
+1. **Clone o repositório**  
+   Certifique-se de ter o Git instalado no seu sistema. Em seguida, execute os comandos abaixo para clonar o repositório do projeto e navegar até o diretório clonado:
+
+   ```bash
+   git clone https://github.com/gabrielcoout/SimulacaoFisicaBasica.git
+   cd SimulacaoFisicaBasica
+Certifique-se de que o Python está instalado
+Verifique se você possui o Python na versão 3.6 ou superior. Caso contrário, faça o download e instale-o a partir do site oficial do Python.
+
+Instale as dependências
+O repositório contém um arquivo requirements.txt, que lista os pacotes necessários para executar o projeto. Para instalar as dependências, execute o seguinte comando:
+
+bash
+Copiar código
+pip install -r requirements.txt
+Se o arquivo requirements.txt ainda não existir, você pode criá-lo manualmente adicionando o seguinte conteúdo:
+
+plaintext
+Copiar código
+pygame
+numpy
+Para gerar o arquivo com as versões exatas instaladas no seu ambiente local, use o comando:
+
+bash
+Copiar código
+pip freeze > requirements.txt
+Exemplos de Uso
+Para rodar a simulação básica, navegue até o diretório clonado e utilize o seguinte comando no terminal:
+
+bash
+Copiar código
+python main.py
+Assim, a simulação será iniciada, e você poderá interagir com a interface gráfica para explorar os conceitos físicos do movimento em um plano inclinado.
