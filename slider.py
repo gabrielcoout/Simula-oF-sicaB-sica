@@ -2,7 +2,7 @@ import pygame
 from pygame.locals import *
 
 class Slider:
-    def __init__(self, x, y, container_width, container_height, slider_width, percentage=50, slider_color=(255, 0, 0), container_color=(0, 0, 0)):
+    def __init__(self, x:int, y:int, container_width:int, container_height:int, slider_width:int, percentage=50, slider_color=(255, 0, 0), container_color=(0, 0, 0)):
         # Inicializa os atributos do slider e do contêiner
         self.container_x = x
         self.container_y = y
@@ -15,11 +15,12 @@ class Slider:
         self.dragging = False
         # Define a porcentagem inicial
         self.percentage = percentage
+
         # Calcula a posição inicial do slider com base na porcentagem
         self.slider_x = x + int((percentage / 100) * (container_width - slider_width))
         self.slider_y = y + (container_height - self.slider_height) // 2
 
-    def handle_event(self, event):
+    def handle_event(self, event:pygame.event.Event):
         """Lida com eventos de interação do usuário."""
         if event.type == pygame.MOUSEBUTTONDOWN:
             # Verifica se o mouse está sobre o slider
@@ -44,7 +45,7 @@ class Slider:
             # Atualiza a porcentagem com base na posição
             self.percentage = ((self.slider_x - self.container_x) / (self.container_width - self.slider_width)) * 100
 
-    def draw(self, surface, text, font=None, text_color=(0, 0, 0)):
+    def draw(self, surface:pygame.surface.Surface, text:str, k=1, font=None, text_color=(0, 0, 0)):
         """Desenha o slider e o contêiner na tela."""
         # Desenha o contêiner
         pygame.draw.rect(surface, self.container_color,
@@ -68,6 +69,17 @@ class Slider:
         # Adiciona o texto à superfície
         surface.blit(text_surface, text_rect)
 
+        # Renderiza a porcentagem dentro do contêiner
+        percentage_text = font.render(f"{2*self.percentage:.0f}%", True, (255, 255, 255))
+        
+        # Posiciona o texto centralizado no contêiner
+        text_rect = percentage_text.get_rect()
+        text_rect.center = (self.container_x + self.container_width // 2, 
+                            self.container_y + self.container_height // 2)
+        
+        # Adiciona o texto à superfície
+        surface.blit(percentage_text, text_rect)
+
     def get_percentage(self):
         """Retorna a porcentagem atual do slider."""
-        return self.percentage
+        return self.percentage/100

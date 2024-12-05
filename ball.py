@@ -14,6 +14,10 @@ class Ball:
         self.color = color
         self.dragging = False
 
+        # funções para o tempo
+        self.elapsed_time = 0  # Tempo total
+        self.start_time = 0  # Tempo quando a bola para de ser arrastada
+
         # Animação do Sonic sendo Carregado
         lifted_image = "img/lifted.png"
         self.lifted = pygame.image.load(lifted_image).convert_alpha() if lifted_image else None
@@ -68,6 +72,7 @@ class Ball:
                 current_image = self.steady_images[self.steady_index]
                 screen.blit(current_image, (self.pos[0] - self.radius, self.pos[1] - self.radius*2))
 
+
     def update(self, bezier_curve, dt, GRAVITY, FRICTION):
         # Aplicar aceleração da gravidade à velocidade vertical
         self.velocity[1] += GRAVITY * dt
@@ -90,8 +95,18 @@ class Ball:
             self.velocity = np.dot(self.velocity, tangent_unit) * tangent_unit
 
             self.velocity *= (1-FRICTION)
+        
+        if not self.dragging and self.start_time is not None:
+            # Atualiza o tempo enquanto não está sendo arrastada
+            self.elapsed_time += dt
+        
 
-
+    
+    def draw_time(self, screen, width, height):
+        # Desenhar o tempo
+        font = pygame.font.Font(None, 36)
+        time_text = font.render(f"Tempo: {self.elapsed_time:.1f}s", True, (0, 0, 0))
+        screen.blit(time_text, (width, height))
 
 
     def reset(self, pos1=WIDTH//2, pos2=HEIGHT//6):
@@ -108,6 +123,8 @@ class Ball:
             # Verificar se a bola está sendo clicada
             if norm(mouse_pos - self.pos) <= self.radius:
                 self.dragging = True
+                self.start_time = None  # Pausar o tempo ao arrastar
+
             # Verificar se o botão de reset foi clicado
             x1, y1, w, h = reset_button_area
             if x1 <= mouse_pos[0] <= x1 + w and y1 <= mouse_pos[1] <= y1 + h:
@@ -115,11 +132,14 @@ class Ball:
 
         elif event.type == pygame.MOUSEBUTTONUP:
             self.dragging = False
+            self.start_time = pygame.time.get_ticks() / 1000.0  # Reinicia o tempo quando solta
 
         elif event.type == pygame.MOUSEMOTION and self.dragging:
             # Atualizar a posição da bola enquanto arrastada
             self.pos = mouse_pos
             self.velocity = np.zeros(2, dtype=np.float64)
+            self.elapsed_time = 0
+            self.start_time = None
 
 
 

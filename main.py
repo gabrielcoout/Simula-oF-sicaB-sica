@@ -1,62 +1,84 @@
+# Bibliotecas
 import pygame
+import pygame.locals
+
+# Módulos
 from config import *
 from slider import Slider
 from bezier_curve import BezierCurve
 from ball import Ball
 
+# Setup
+PRECISAO = 2
+STANDARD_GRAVITY = 9.80665
+TIME_TO_FALL = 1.5
+pixels_per_meter = HEIGHT / (0.5 * 9.81 * TIME_TO_FALL**2)
+
+
 # Constantes
 FPS = 60
-METERS_TO_PIXELS = 100
-BASE_GRAVITY = 9.8 * METERS_TO_PIXELS / 60  # Gravidade base
-FRICTION = 0.98  # Coeficiente de atrito
+GRAVITY =  9.8 * pixels_per_meter # Base da gravidade
+FRICTION = 0                      # Valor inicial de atrito
 
+# Setup PYGAME
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
+pygame.display.set_caption('test caption')
 
 # Objetos do jogo
-ball = Ball(WIDTH // 2, HEIGHT // 2, radius=20, color=BLUE)  # Bola principal
-slider1 = Slider(2, HEIGHT - 60, WIDTH // 6, HEIGHT // 17, 10)  # Controle de gravidade
-slider2 = Slider(2, HEIGHT - 120, WIDTH // 6, HEIGHT // 17, 10, 0)  # Controle de atrito
-control_points = [(WIDTH // 6, 200), (250, 550), (400, 100), (550, 550), (5 * WIDTH // 6, 200)]  # Pontos de controle para a curva de Bézier
-curve = BezierCurve(points=control_points, color=GRAY, width=7)  # Curva de Bézier
+ball = Ball(WIDTH // 2, HEIGHT // 4, radius=20, color=BLUE)
+slider1 = Slider(2, HEIGHT - 60, WIDTH // 6, HEIGHT // 17, 10)  # Gravidade
+slider2 = Slider(2, HEIGHT - 120, WIDTH // 6, HEIGHT // 17, 10)  # Atrito
+control_points = [(WIDTH // 6, 200), (250, 550), (400, 100), (550, 550), (5 * WIDTH // 6, 200)]
+curve = BezierCurve(points=control_points, color=GRAY, width=6)
 
+# imagem_de_fundo = pygame.image.load(r"img\fundo.jpg")
+# FUNDO = pygame.transform.scale(imagem_de_fundo, (WIDTH, HEIGHT))
+
+# Main loop
 running = True
 while running:
-    dt = 1 / FPS  # Intervalo de tempo entre quadros
+    dt = clock.tick(FPS) * 0.001 
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:  # Verifica se o jogador deseja sair
+        # Controle da saída do jogo
+        if event.type == pygame.QUIT:
             running = False
-        ball.handle_event(event)  # Processa eventos relacionados à bola
-        slider1.handle_event(event)  # Processa eventos relacionados ao controle de gravidade
-        slider2.handle_event(event)  # Processa eventos relacionados ao controle de atrito
-        curve.handle_event(event)  # Processa eventos relacionados à curva
+        # Controle das interações do usuário
+        ball.handle_event(event)
+        slider1.handle_event(event)
+        slider2.handle_event(event)
+        curve.handle_event(event)
 
-    # Atualizações dos controles
-    slider1.update()  # Atualiza o controle de gravidade
-    slider2.update()  # Atualiza o controle de atrito
- 
-    gravity = slider1.get_percentage() * BASE_GRAVITY  # Calcula a gravidade baseada no slider
-    friction = slider2.get_percentage() / 200  # Calcula o atrito baseado no slider
-
-    ball.update(curve, dt, gravity, friction)  # Atualiza a posição e estado da bola
+    # Atualizações
+    slider1.update()
+    slider2.update()
+    gravity = slider1.get_percentage() * GRAVITY * 2
+    # friction = slider2.get_percentage() * FRICTION * 0.095 / 200  # Ajustar como fração
+    ball.update(curve, dt, gravity, FRICTION)
 
     # Desenho na tela
-    screen.fill(WHITE)  # Preenche o fundo com cor branca
-    curve.draw(screen)  # Desenha a curva de Bézier
-    curve.draw_control_points(screen)  # Desenha os pontos de controle da curva
+    screen.fill(WHITE)
+    # screen.blit(FUNDO, (0, 0))
+    curve.draw(screen)
+    curve.draw_control_points(screen)
 
     # Botão de reset
-    pygame.draw.rect(screen, GRAY, (10, 10, 100, 40), border_radius=5)  # Desenha o botão de reset
+    pygame.draw.rect(screen, GRAY, (10, 10, 100, 40), border_radius=5)
     font = pygame.font.Font(None, 36)
-    text = font.render("Reset", True, WHITE)  # Texto do botão
-    screen.blit(text, (60 - text.get_width() // 2, 30 - text.get_height() // 2))  # Centraliza o texto no botão
+    text = font.render("Reset", True, WHITE)
+    screen.blit(text, (60 - text.get_width() // 2, 30 - text.get_height() // 2))
 
-    slider1.draw(screen, "Gravidade")  # Desenha o controle de gravidade
-    slider2.draw(screen, "Atrito")  # Desenha o controle de atrito
-    ball.draw(screen, dt)  # Desenha a bola
+    ball.draw(screen, dt)
+    slider1.draw(screen, "Gravidade", 2)
+    slider2.draw(screen, "Atrito")
+    ball.draw_time(screen, WIDTH-151, 30)
 
-    pygame.display.flip()  # Atualiza a tela
-    clock.tick(FPS)  # Controla a taxa de quadros por segundo
+    fps = clock.get_fps()
+    fps_text = font.render(f"FPS: {int(fps)}", True, BLACK)
+    screen.blit(fps_text, (WIDTH-151, 10))
 
-pygame.quit()  # Encerra o jogo
+    pygame.display.flip()
+    # clock.tick(FPS)
+
+pygame.quit()
