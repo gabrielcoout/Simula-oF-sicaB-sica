@@ -173,7 +173,7 @@ como $v_x = v_{tangente} \sin{\theta}$ e $v_x = v_{tangente} \cos{\theta}$ entã
 $$a_x = g (\cos{\theta}\sin{\theta})$$
 $$a_y = g(\sin^2(\theta))$$
 
-A partir desses resultados, incrementa-se (integra) a velocidade em intervalos pequenos de tempo `dt`, da seguinte forma:
+A partir desses resultados, incrementa-se (integra) a velocidade em intervalos pequenos de tempo `dt`, o passo do método definido como pygame.clock.tick(FPS=60)/0.001, da seguinte forma:
 ```
 self.aceleration[1] = GRAVITY * (sin_theta**2) 
 self.aceleration[0] = GRAVITY * (sin_theta * cos_theta) 
@@ -197,6 +197,7 @@ Tanto no caso em que há contato com a curva quanto em queda livre, a atualizaç
 $$
 \text{self.pos} += \text{self.velocity} \cdot dt
 $$
+
 
 ## Conclusão
 
