@@ -70,7 +70,7 @@ class Slider:
         surface.blit(text_surface, text_rect)
 
         # Renderiza a porcentagem dentro do contêiner
-        percentage_text = font.render(f"{2*self.percentage:.0f}%", True, (255, 255, 255))
+        percentage_text = font.render(f"{k*self.percentage:.0f}%", True, (255, 255, 255))
         
         # Posiciona o texto centralizado no contêiner
         text_rect = percentage_text.get_rect()

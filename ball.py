@@ -5,14 +5,20 @@ import numpy as np
 from bezier_curve import *
 from config import *
 
+STANDARD_GRAVITY = 9.80665
+TIME_TO_FALL = 1.5
+pixels_per_meter = HEIGHT / (0.5 * 9.81 * TIME_TO_FALL**2)
 
 class Ball:
-    def __init__(self, x, y, radius, color):
+    def __init__(self, x, y, radius, mass, color):
         self.pos = np.array([x, y], dtype=np.float64)  # Vetor Posição
         self.velocity = np.zeros(2, dtype=np.float64)  # Vetor Velocidade
+        self.aceleration = np.zeros(2, dtype=np.float64)
         self.radius = radius
+        self.mass = mass
         self.color = color
         self.dragging = False
+        self.sliding = False
 
         # funções para o tempo
         self.elapsed_time = 0  # Tempo total
@@ -51,7 +57,7 @@ class Ball:
         if self.dragging and self.lifted:
             screen.blit(self.lifted, (self.pos[0] - self.radius, self.pos[1] - self.radius))
         else:
-            speed = np.linalg.norm(self.velocity)
+            speed = np.linalg.norm(self.velocity/pixels_per_meter)
             if speed > 5e-1:  # Se não estiver parado
                 self.time_since_last_frame += dt
                 if self.time_since_last_frame >= self.animation_speed:
@@ -72,35 +78,56 @@ class Ball:
                 current_image = self.steady_images[self.steady_index]
                 screen.blit(current_image, (self.pos[0] - self.radius, self.pos[1] - self.radius*2))
 
-
-    def update(self, bezier_curve, dt, GRAVITY, FRICTION):
-        # Aplicar aceleração da gravidade à velocidade vertical
-        self.velocity[1] += GRAVITY * dt
-
-        # Atualizar posição com base na velocidade
-        self.pos += self.velocity * dt
-
-        # Verificar colisão com a curva de Bézier
-        closest_point, tangent_vector = bezier_curve.closest_point_and_tangent(self.pos)
+    def update(self, bezier_curve:BezierCurve, dt:float, GRAVITY:float, FRICTION:float):
+        # Encontrar ponto mais próximo na curva e vetor tangente
+        closest_point, tangent_vector = bezier_curve.closest_point_and_tangent(self.pos, 800)
         distance = np.linalg.norm(self.pos - closest_point)
 
-        if distance < self.radius:
-            # Ajustar posição para não atravessar a curva
+        if distance - self.radius< 1e-3:
+            if not self.sliding or norm(self.velocity)<0.1:  # Apenas no primeiro toque
+                minimos = bezier_curve.find_max_point(self.pos)
+                index = np.argmin([np.linalg.norm(i) for i in minimos])
+                height = minimos[index][1] - (self.pos[1] - self.radius)
+                self.total_energy = self.mass * (
+                    0.5 * np.linalg.norm(self.velocity)**2 - GRAVITY * height
+                )
+                self.sliding = True
+                
+            # Correção de posição para evitar interseção
             normal = (self.pos - closest_point) / distance if distance > 0 else np.array([0, 1])
             overlap = self.radius - distance
             self.pos += normal * overlap
 
-            # Projetar velocidade no vetor tangente para simular deslizamento
+            # # Calcular o ângulo theta baseado no vetor tangente
+            theta = np.arctan2(tangent_vector[1], tangent_vector[0])
+            
+            # Calcular componentes do ângulo
+            sin_theta = np.sin(theta)
+            cos_theta = np.cos(theta)
+
+            # # Atualizar velocidade devido à gravidade e atrito
             tangent_unit = tangent_vector / np.linalg.norm(tangent_vector)
             self.velocity = np.dot(self.velocity, tangent_unit) * tangent_unit
-
+            self.aceleration[1] = GRAVITY * (sin_theta**2) 
+            self.aceleration[0] = GRAVITY * (sin_theta * cos_theta) 
+            self.velocity += self.aceleration * dt
             self.velocity *= (1-FRICTION)
-        
+
+        elif distance - self.radius > 1:
+            # Se não houver colisão, aplicar apenas a gravidade
+            self.aceleration = np.array([0,GRAVITY])
+            self.velocity += self.aceleration*dt
+
+            # Atualizar posição da bola com base na velocidade
+        self.pos += self.velocity * dt
+
+        if self.sliding and (self.dragging or distance - self.radius > 1):
+            # Sair do estado de deslizamento
+            self.sliding = False
+
         if not self.dragging and self.start_time is not None:
             # Atualiza o tempo enquanto não está sendo arrastada
             self.elapsed_time += dt
-        
-
     
     def draw_time(self, screen, width, height):
         # Desenhar o tempo
@@ -140,6 +167,34 @@ class Ball:
             self.velocity = np.zeros(2, dtype=np.float64)
             self.elapsed_time = 0
             self.start_time = None
+
+    def draw_velocity(self, screen, pixels_per_meter, scale=0.25):
+        """Desenha a velocidade da bola como uma seta na tela."""
+        # Converter a velocidade para metros por segundo
+        velocity_meters = self.velocity / pixels_per_meter
+
+        # Calcular o ponto final da seta (escalado)
+        arrow_end = self.pos + velocity_meters * pixels_per_meter * scale
+
+        # Desenhar a seta representando a velocidade
+        arrow_color = (255, 0, 0)  # Cor vermelha para a seta
+        pygame.draw.line(screen, arrow_color, self.pos, arrow_end, 2)
+
+        # Desenhar a ponta da seta (triângulo)
+        direction = velocity_meters / np.linalg.norm(velocity_meters) if np.linalg.norm(velocity_meters) > 0 else np.array([1, 0])
+        perpendicular = np.array([-direction[1], direction[0]])  # Vetor perpendicular à direção
+        arrow_size = 10  # Tamanho da ponta da seta
+
+        tip1 = arrow_end - direction * arrow_size + perpendicular * (arrow_size / 2)
+        tip2 = arrow_end - direction * arrow_size - perpendicular * (arrow_size / 2)
+        pygame.draw.polygon(screen, arrow_color, [arrow_end, tip1, tip2])
+
+        # Desenhar o valor da velocidade em texto
+        speed = np.linalg.norm(velocity_meters)  # Magnitude da velocidade em m/s
+        font = pygame.font.Font(None, 24)
+        velocity_text = font.render(f"Velocidade: {speed:.1f} m/s", True, (0, 0, 0))
+        screen.blit(velocity_text, (self.pos[0] + 40, self.pos[1] - 20))
+
 
 
 

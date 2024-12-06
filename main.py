@@ -17,8 +17,8 @@ pixels_per_meter = HEIGHT / (0.5 * 9.81 * TIME_TO_FALL**2)
 
 # Constantes
 FPS = 60
-GRAVITY =  9.8 * pixels_per_meter # Base da gravidade
-FRICTION = 0                      # Valor inicial de atrito
+GRAVITY =  9.8 * pixels_per_meter  # Base da gravidade
+FRICTION = 0.5                    # Valor inicial de atrito
 
 # Setup PYGAME
 pygame.init()
@@ -27,14 +27,11 @@ clock = pygame.time.Clock()
 pygame.display.set_caption('test caption')
 
 # Objetos do jogo
-ball = Ball(WIDTH // 2, HEIGHT // 4, radius=20, color=BLUE)
+ball = Ball(WIDTH // 2, HEIGHT // 4, radius=20, mass=1, color=BLUE)
 slider1 = Slider(2, HEIGHT - 60, WIDTH // 6, HEIGHT // 17, 10)  # Gravidade
-slider2 = Slider(2, HEIGHT - 120, WIDTH // 6, HEIGHT // 17, 10)  # Atrito
-control_points = [(WIDTH // 6, 200), (250, 550), (400, 100), (550, 550), (5 * WIDTH // 6, 200)]
+slider2 = Slider(2, HEIGHT - 120, WIDTH // 6, HEIGHT // 17, 10, 0)  # Atrito
+control_points = [(WIDTH // 6, 200), (250, 550), (400, 600), (550, 550), (5 * WIDTH // 6, 200)]
 curve = BezierCurve(points=control_points, color=GRAY, width=6)
-
-# imagem_de_fundo = pygame.image.load(r"img\fundo.jpg")
-# FUNDO = pygame.transform.scale(imagem_de_fundo, (WIDTH, HEIGHT))
 
 # Main loop
 running = True
@@ -54,12 +51,11 @@ while running:
     slider1.update()
     slider2.update()
     gravity = slider1.get_percentage() * GRAVITY * 2
-    # friction = slider2.get_percentage() * FRICTION * 0.095 / 200  # Ajustar como fração
-    ball.update(curve, dt, gravity, FRICTION)
+    friction = slider2.get_percentage() * FRICTION * 2
+    ball.update(curve, dt, gravity, friction)
 
     # Desenho na tela
     screen.fill(WHITE)
-    # screen.blit(FUNDO, (0, 0))
     curve.draw(screen)
     curve.draw_control_points(screen)
 
@@ -71,14 +67,14 @@ while running:
 
     ball.draw(screen, dt)
     slider1.draw(screen, "Gravidade", 2)
-    slider2.draw(screen, "Atrito")
+    slider2.draw(screen, "Atrito", 2)
     ball.draw_time(screen, WIDTH-151, 30)
+    ball.draw_velocity(screen,pixels_per_meter)
 
     fps = clock.get_fps()
     fps_text = font.render(f"FPS: {int(fps)}", True, BLACK)
     screen.blit(fps_text, (WIDTH-151, 10))
 
     pygame.display.flip()
-    # clock.tick(FPS)
 
 pygame.quit()

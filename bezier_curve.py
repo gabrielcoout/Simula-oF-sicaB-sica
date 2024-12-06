@@ -3,6 +3,7 @@ import pygame
 import math
 import numpy as np
 from config import *
+import scipy.optimize as opt
 
 
 class BezierCurve:
@@ -40,6 +41,7 @@ class BezierCurve:
         min_index = np.argmin(distances)
         closest_point = curve_points[min_index]
         tangent_vector = self.get_tangent(t_values[min_index])
+        max_y = np.max(curve_points[:, 1])
         return closest_point, tangent_vector
 
     def closest_point_angle(self, coord):
@@ -88,3 +90,50 @@ class BezierCurve:
                 self.points[self.dragging_point_index] = np.array([
                     max(0, min(WIDTH, event.pos[0])),
                     max(0, min(HEIGHT, event.pos[1]))])
+                
+    def find_max_point(self, point, learning_rate=0.01, num_segments=100):
+        # Dividimos t em segmentos igualmente espaçados
+        t_values = np.linspace(0, 1, num_segments + 1)
+        points = [self.get_point(t) for t in t_values]
+        tangents = [self.get_tangent(t) for t in t_values]
+
+        # Lista para armazenar os máximos locais
+        local_maxima = []
+
+        # Verifica os extremos
+        # Extremo esquerdo (t = 0)
+        t_0 = 0
+        t_next = t_values[1]
+        if self.get_point(t_0)[1] > self.get_point(t_next)[1]:  # Maior que o próximo ponto
+            local_maxima.append(self.get_point(t_0))
+
+        # Extremo direito (t = 1)
+        t_1 = 1
+        t_prev = t_values[-2]
+        if self.get_point(t_1)[1] > self.get_point(t_prev)[1]:  # Maior que o ponto anterior
+            local_maxima.append(self.get_point(t_1))
+
+        # Percorre os segmentos e detecta mudanças de sinal na componente y do vetor tangente
+        for i in range(1, len(tangents)):
+            prev_tangent_y = tangents[i - 1][1]
+            curr_tangent_y = tangents[i][1]
+
+            # Detecta mudança de sinal (de positivo para negativo)
+            if prev_tangent_y > 0 and curr_tangent_y <= 0:
+                # Estimativa inicial para o máximo local (ponto médio do intervalo)
+                t_mid = (t_values[i - 1] + t_values[i]) / 2
+
+                # Refinamos usando busca binária para maior precisão
+                t_left, t_right = t_values[i - 1], t_values[i]
+                while t_right - t_left > 1e-2:
+                    t_mid = (t_left + t_right) / 2
+                    tangent_mid_y = self.get_tangent(t_mid)[1]
+                    if tangent_mid_y > 0:
+                        t_left = t_mid
+                    else:
+                        t_right = t_mid
+
+                # Adiciona o ponto máximo encontrado
+                local_maxima.append(self.get_point(t_mid))
+
+        return np.array(local_maxima)
