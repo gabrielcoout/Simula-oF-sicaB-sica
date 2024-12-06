@@ -130,7 +130,6 @@ A classe **`Ball`** é a principal classe do programa e modela uma bola interati
 - **`velocity`**: Vetor 2D para velocidade da bola $$(v_x, v_y)$$.
 - **`acceleration`**: Vetor 2D para aceleração da bola $$(a_x, a_y)$$.
 - **`radius`**: Raio da bola.
-- **`mass`**: Massa da bola.
 - **`color`**: Cor da bola no formato RGB.
 - **`animations`**: 
   - Levantada.
