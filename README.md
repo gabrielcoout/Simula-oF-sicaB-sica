@@ -54,7 +54,7 @@ Ao realizar do projeto, foi definida uma sequência de passos ordenados para a c
 
 Ademais, foram estabelecidos objetivos para simulação, isto é, definiu-se alguns resultados que se desejou visualizar na execução do projeto, a fim de atestar sua qualidade. Foram eles:
 - Visualizar que, na ausência de forças, o objeto mantêm seu vetor velocidade constante. Em particular, buscou-se notar o efeitos da ausência de gravidade.
-- Visualizar que, na ausência de atrito, a velocidade de um objeto se mantém.
+- Visualizar que, na ausência de atrito, a energia se conserva.
 - Visualizar que existe um valor no qual o atrito cancela à aceleração da gravidade.
 - Notar que, ao chegar em pontos criticos, a velocidade se anula.
 
